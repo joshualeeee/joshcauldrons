@@ -67,7 +67,8 @@ def get_bottle_plan():
     while ml >= 100:
         ml -= 100
         quantity += 1
-    
+    if quantity == 0:
+        return []
     return [
             {
                 "potion_type": [100, 0, 0, 0],
