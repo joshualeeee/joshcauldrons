@@ -21,7 +21,8 @@ def get_catalog():
     if row is not None:
         num_red_potions = row[0]
 
-    return [
+    if num_red_potions > 0:
+        return [
             {
                 "sku": "RED_POTION_0",
                 "name": "red potion",
@@ -30,3 +31,5 @@ def get_catalog():
                 "potion_type": [100, 0, 0, 0],
             }
         ]
+    else:
+        return []
