@@ -44,6 +44,7 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
+
     cart = cart_tracker[cart_id]
 
 
@@ -66,30 +67,45 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
     print(cart_checkout)
 
-    query = "SELECT num_red_potions, gold FROM global_inventory"
+    query = "SELECT num_red_potions, num_blue_potions, num_green_potions, gold FROM global_inventory"
 
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(query))
     
     row = result.fetchone()
     if row is not None:
-        pots = row[0]
-        gold = row[1]
+        red_pots = row[0]
+        blue_pots = row[1]
+        green_pots = row[2]
+        gold = row[3]
 
     cart = cart_tracker[cart_id]
 
     new_gold = 0
     pots_sold = 0
     for order in cart:
-        while order[1] > 0 and pots > 0:
-            new_gold += 50
-            pots_sold += 1
-            pots -= 1
-            order[1] -= 1
+        if order[0] == "RED_POTION_0":
+            while order[1] > 0 and red_pots > 0:
+                new_gold += 50
+                pots_sold += 1
+                red_pots -= 1
+                order[1] -= 1
+        if order[0] == "BLUE_POTION_0":
+            while order[1] > 0 and blue_pots > 0:
+                new_gold += 50
+                pots_sold += 1
+                blue_pots -= 1
+                order[1] -= 1
+        if order[0] == "GREEN_POTION_0":
+            while order[1] > 0 and green_pots > 0:
+                new_gold += 50
+                pots_sold += 1
+                green_pots -= 1
+                order[1] -= 1
 
     gold += new_gold
 
-    query = "UPDATE global_inventory SET num_red_potions = {}, gold = {}".format(pots, gold)
+    query = "UPDATE global_inventory SET num_red_potions = {}, num_blue_potions = {},num_green_potions = {},gold = {}".format(red_pots, blue_pots, green_pots, gold)
 
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(query))
