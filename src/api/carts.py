@@ -92,7 +92,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 order[1] -= 1
         if order[0] == "BLUE_POTION_0":
             while order[1] > 0 and blue_pots > 0:
-                new_gold += 50
+                new_gold += 60
                 pots_sold += 1
                 blue_pots -= 1
                 order[1] -= 1
