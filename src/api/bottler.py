@@ -43,7 +43,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         if deliveries.potion_type == [0, 0, 100, 0] or deliveries.potion_type == [0, 0, 1, 0]:
             blue_pots += deliveries.quantity
             blue_ml -= deliveries.quantity * 100
-        if deliveries.potion_type == [0, 0, 100, 0] or deliveries.potion_type == [0, 0, 1, 0]:
+        if deliveries.potion_type == [0, 100, 0, 0] or deliveries.potion_type == [0, 1, 0, 0]:
             green_pots += deliveries.quantity
             green_ml -= deliveries.quantity * 100
 

@@ -69,25 +69,36 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     row = result.fetchone()
     pots = []
     if row is not None:
-        pots.append("SMALL_RED_BARREL", row[0])
-        pots.append("SMALL_BLUE_BARREL", row[1])
-        pots.append("SMALL_GREEN_BARREL", row[2])
+        pots.append(("SMALL_RED_BARREL", row[0]))
+        pots.append(("SMALL_BLUE_BARREL", row[1]))
+        pots.append(("SMALL_GREEN_BARREL", row[2]))
         gold = row[3]
      
     # sorts in asc by second value 
-    pots.sort(key = lambda x: x[1]) 
 
+    min_tuple = min(pots, key=lambda x: x[1])
+    
     res = []
 
-    for p in pots:
-        if p[1] < 10:
-            for barrel in wholesale_catalog:
-                if barrel.sku == p[0] and gold >= barrel.price:
-                    gold -= barrel.price
-                    res.append({
-                        "sku": p[0],
-                        "quantity": 1,
-                    })
+
+    for barrel in wholesale_catalog:
+        if barrel.sku == min_tuple[0] and gold >= barrel.price:
+            gold -= barrel.price
+            res.append({
+                "sku": min_tuple[0],
+                "quantity": 1,
+            })
+
+    # pots.sort(key = lambda x: x[1]) 
+    # for p in pots:
+    #     if p[1] < 10:
+    #         for barrel in wholesale_catalog:
+    #             if barrel.sku == p[0] and gold >= barrel.price:
+    #                 gold -= barrel.price
+    #                 res.append({
+    #                     "sku": p[0],
+    #                     "quantity": 1,
+    #                 })
     
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(query))
