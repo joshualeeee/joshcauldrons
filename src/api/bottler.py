@@ -107,4 +107,5 @@ def get_bottle_plan():
             "quantity": quantity,
         })
 
+    print(res)
     return res

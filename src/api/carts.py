@@ -78,7 +78,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         blue_pots = row[1]
         green_pots = row[2]
         gold = row[3]
-
+        
     cart = cart_tracker[cart_id]
 
     new_gold = 0
@@ -110,4 +110,6 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(query))
 
+
+    print("total_potions_bought", pots_sold, "total_gold_paid", new_gold)
     return {"total_potions_bought": pots_sold, "total_gold_paid": new_gold}

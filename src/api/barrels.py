@@ -92,4 +92,5 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(query))
 
+    print(res)
     return res
