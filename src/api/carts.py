@@ -86,19 +86,22 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     for order in cart:
         if order[0] == "RED_POTION_0":
             while order[1] > 0 and red_pots > 0:
-                new_gold += 50
+                print("red")
+                new_gold += 25
                 pots_sold += 1
                 red_pots -= 1
                 order[1] -= 1
         if order[0] == "BLUE_POTION_0":
             while order[1] > 0 and blue_pots > 0:
-                new_gold += 60
+                print("blue")
+                new_gold += 25
                 pots_sold += 1
                 blue_pots -= 1
                 order[1] -= 1
         if order[0] == "GREEN_POTION_0":
             while order[1] > 0 and green_pots > 0:
-                new_gold += 50
+                print("green")
+                new_gold += 25
                 pots_sold += 1
                 green_pots -= 1
                 order[1] -= 1
