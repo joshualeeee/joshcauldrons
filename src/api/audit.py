@@ -27,8 +27,8 @@ def get_inventory():
                                                   SELECT gold, red_ml, green_ml, blue_ml, dark_ml
                                                   FROM globals""")).fetchone()
 
-    print("number_of_potions", total_pots, "ml_in_barrels", g[0], "gold", (g[1] + g[2] + g[3] + g[4]))
-    return {"number_of_potions": total_pots, "ml_in_barrels": g[0], "gold": (g[1] + g[2] + g[3] + g[4])}
+    print("number_of_potions", total_pots, "ml_in_barrels", (g[1] + g[2] + g[3] + g[4]), "gold", g[0])
+    return {"number_of_potions": total_pots, "ml_in_barrels": (g[1] + g[2] + g[3] + g[4]), "gold": g[0]}
 
 class Result(BaseModel):
     gold_match: bool
