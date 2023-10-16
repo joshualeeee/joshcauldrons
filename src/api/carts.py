@@ -71,30 +71,34 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         pots = 0
         gold_paid = 0
         for item in cart:
+            original_inventory = connection.execute(sqlalchemy.text("""
+                                                SELECT inventory FROM potions WHERE id = :potion_id;
+                                               """), [{"potion_id": item[0]}]).fetchone()
+
             i = connection.execute(sqlalchemy.text("""
                                                     UPDATE potions
                                                     SET inventory = CASE WHEN inventory >= :quantity THEN inventory - :quantity ELSE inventory END
                                                     WHERE id = :potion_id
-                                                    RETURNING cost, :quantity AS deducted_quantity
-                                                """), [{"quantity": item[1], "potion_id": item[0]}]).fetchone()
+                                                    RETURNING cost, CASE WHEN :original_inventory - :quantity >= 0 THEN :quantity ELSE 0 END
+                                                """), [{"quantity": item[1], "potion_id": item[0], "original_inventory": original_inventory[0]}]).fetchone()
             
+            cost = i[0]
+            quantity_sold = i[1]
             connection.execute(sqlalchemy.text("""
                                                     DELETE FROM cart_items
                                                     WHERE cart_id = :cart_id 
                                                     AND potion_id = :potion_id;
-                                                """), [{"cart_id": cart_id, "potion_id": item[0]}]).fetchone()
+                                                """), [{"cart_id": cart_id, "potion_id": item[0]}])
             
             connection.execute(sqlalchemy.text("""
                                                 UPDATE globals
                                                 SET gold = gold + :cost * :quantity
                                                 """), 
-                                                [{"cost": i[0], "quantity": i[1]}])
+                                                [{"cost": cost, "quantity": quantity_sold}])
             
             if i:
-                cost = i[0]
-                quantity = i[1]
-                pots += quantity
-                gold_paid += cost * quantity
+                pots += quantity_sold
+                gold_paid += cost * quantity_sold
 
     print("total_potions_bought", pots, "total_gold_paid", gold_paid)
     return {"total_potions_bought": pots, "total_gold_paid": gold_paid}
