@@ -80,9 +80,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         res = []
         bought = 0
         while gold >= 100 and bought < 5:
-            bought += 1
             for barrel in wholesale_catalog:
                 if options[current_index] == barrel.potion_type and (barrel.price == 100 or barrel.price == 120) and barrel.price <= gold:
+                    bought += 1
                     gold -= barrel.price
                     res.append({
                         "sku": barrel.sku,
@@ -91,6 +91,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     rotate_options()
                     break
             if bought == 0:
+                rotate_options()
+        if bought == 0:
                 rotate_options()
     
     print(res)
