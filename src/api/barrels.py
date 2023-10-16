@@ -24,84 +24,74 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
 
-    query = "SELECT num_red_ml, num_blue_ml, num_green_ml, gold FROM global_inventory"
-    
+    gold_paid = 0
+    red_ml = 0
+    green_ml = 0
+    blue_ml = 0
+    dark_ml = 0
 
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(query))
-
-    row = result.fetchone()
-    if row is not None:
-        red_ml = row[0]
-        blue_ml = row[1]
-        green_ml = row[2]
-        gold = row[3]
-    
     for barrel in barrels_delivered:
-        if barrel.sku == "SMALL_RED_BARREL":
+        gold_paid += barrel.price * barrel.quantity
+        if barrel.potion_type == [1,0,0,0]:
             red_ml += barrel.ml_per_barrel * barrel.quantity
-            gold -= barrel.price * barrel.quantity
-        if barrel.sku == "SMALL_BLUE_BARREL":
-            blue_ml += barrel.ml_per_barrel * barrel.quantity
-            gold -= barrel.price * barrel.quantity
-        if barrel.sku == "SMALL_GREEN_BARREL":
+        elif barrel.potion_type == [0,1,0,0]:
             green_ml += barrel.ml_per_barrel * barrel.quantity
-            gold -= barrel.price * barrel.quantity
-    
-    query = "UPDATE global_inventory SET num_red_ml = {}, num_blue_ml = {}, num_green_ml = {}, gold = {}".format(red_ml,blue_ml,green_ml,gold)
-
+        elif barrel.potion_type == [0,0,1,0]:
+            blue_ml += barrel.ml_per_barrel * barrel.quantity
+        elif barrel.potion_type == [0,0,0,1]:
+            dark_ml += barrel.ml_per_barrel * barrel.quantity
+        else:
+            raise Exception("Invalid Potion Type")
+        
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(query))
+        result = connection.execute(sqlalchemy.text(
+            """
+            UPDATE globals SET
+            red_ml = red_ml + :red_ml,
+            green_ml = green_ml + :green_ml,
+            blue_ml = blue_ml + :blue_ml,
+            dark_ml = dark_ml + :dark_ml
+            """),
+            [{"red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml}])
 
     return "OK"
+
+
+options = [[1,0,0,0], [0,1,0,0], [0,0,1,0]]
+current_index = 0
+
+# Function to rotate to the next option
+def rotate_options():
+    global current_index
+    current_index = (current_index + 1) % len(options)
 
 # Gets called once a day 
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
-
-    query = "SELECT num_red_potions, num_blue_potions, num_green_potions, gold FROM global_inventory"
-
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(query))
-    
-    row = result.fetchone()
-    pots = []
-    if row is not None:
-        pots.append(("SMALL_RED_BARREL", row[0]))
-        pots.append(("SMALL_BLUE_BARREL", row[1]))
-        pots.append(("SMALL_GREEN_BARREL", row[2]))
-        gold = row[3]
-     
-    # sorts in asc by second value 
-
-    min_tuple = min(pots, key=lambda x: x[1])
-    
-    res = []
-
-
-    for barrel in wholesale_catalog:
-        if barrel.sku == min_tuple[0] and gold >= barrel.price:
-            gold -= barrel.price
-            res.append({
-                "sku": min_tuple[0],
-                "quantity": 1,
-            })
-
-    # pots.sort(key = lambda x: x[1]) 
-    # for p in pots:
-    #     if p[1] < 10:
-    #         for barrel in wholesale_catalog:
-    #             if barrel.sku == p[0] and gold >= barrel.price:
-    #                 gold -= barrel.price
-    #                 res.append({
-    #                     "sku": p[0],
-    #                     "quantity": 1,
-    #                 })
+    global current_index
     
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(query))
+        query = connection.execute(sqlalchemy.text("""SELECT gold FROM globals""")).fetchone()
+        
+        gold = query[0]
 
+        res = []
+        bought = 0
+        while gold >= 120 and bought < 5:
+            bought += 1
+            for barrel in wholesale_catalog:
+                if options[current_index] == barrel.potion_type and (barrel.price == 100 or barrel.price == 120):
+                    gold -= barrel.price
+                    res.append({
+                        "sku": barrel.sku,
+                        "quantity": 1,
+                    })
+                    rotate_options()
+                    break
+        if bought == 0:
+            rotate_options()
+    
     print(res)
     return res
