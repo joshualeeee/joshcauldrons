@@ -24,5 +24,5 @@ def get_catalog():
                 "quantity": p[2],
                 "price": p[3],
                 "potion_type": p[4]})
-    print(res)
+    print("get_catalog:", res)
     return res

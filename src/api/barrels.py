@@ -69,7 +69,7 @@ def rotate_options():
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
-    print(wholesale_catalog)
+    print("wholesale catalog:", wholesale_catalog)
     global current_index
     
     with db.engine.begin() as connection:
