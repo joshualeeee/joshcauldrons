@@ -47,7 +47,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
         result = connection.execute(sqlalchemy.text(
             """
             UPDATE globals SET
-            gold = gold + :gold_paid
+            gold = gold - :gold_paid
             red_ml = red_ml + :red_ml,
             green_ml = green_ml + :green_ml,
             blue_ml = blue_ml + :blue_ml,
