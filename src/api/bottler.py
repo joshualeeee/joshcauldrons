@@ -41,6 +41,8 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                                 """),
                 [{"additional_potions": potion.quantity,
                 "potion_type": potion.potion_type}])
+            
+            print("additional_potions", potion.quantity, "potion_type", potion.potion_type)
         
         connection.execute(
                 sqlalchemy.text("""
