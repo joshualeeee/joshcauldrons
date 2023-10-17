@@ -89,7 +89,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                                                 [{"potion_id": order[1], "quantity": order[0]}]).fetchone()
         
             pots += order[0]
-            new_gold += gold_paid[0] * order[1]
+            new_gold += gold_paid[0] * order[0]
 
     print("total_potions_bought", pots, "total_gold_paid", new_gold)
     return {"total_potions_bought": pots, "total_gold_paid": new_gold}
