@@ -89,11 +89,13 @@ def get_bottle_plan():
 
         ml_amounts = [q[0], q[1], q[2], q[3]]
 
+        potions = connection.execute(sqlalchemy.text("""SELECT potion_type
+                                                        FROM potions
+                                                        ORDER BY inventory ASC, cost ASC""")).fetchall()
+
         res = []
-        create_potions(ml_amounts, [100, 0, 0, 0], res, [250, 0, 0, 0])
-        create_potions(ml_amounts, [0, 100, 0, 0], res, [0, 250, 0, 0])
-        create_potions(ml_amounts, [0, 0, 100, 0], res, [0, 0, 250, 0])
-        create_potions(ml_amounts, [50, 0, 50, 0], res, [50, 0, 50, 0])
+        for pot in potions:
+            create_potions(ml_amounts, pot[0], res, pot[0]) 
 
         print(res)
         return res
