@@ -93,7 +93,7 @@ def get_bottle_plan():
 
         potions = connection.execute(sqlalchemy.text("""SELECT potion_type
                                                         FROM potions
-                                                        ORDER BY inventory ASC, cost ASC""")).fetchall()
+                                                        ORDER BY inventory ASC, cost DESC""")).fetchall()
 
         res = []
         for pot in potions:
