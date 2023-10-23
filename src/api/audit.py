@@ -16,19 +16,13 @@ def get_inventory():
     """ """
     
     with db.engine.begin() as connection:
-        pots = connection.execute(sqlalchemy.text("""
-                                                  SELECT inventory
-                                                  FROM potions""")).fetchall()
-        total_pots = 0
-        for p in pots:
-            total_pots += p[0]
-        
-        g = connection.execute(sqlalchemy.text("""
-                                                  SELECT gold, red_ml, green_ml, blue_ml, dark_ml
-                                                  FROM globals""")).fetchone()
+        results = connection.execute(sqlalchemy.text("""
+                                                  SELECT sum(potion_change) as pots, sum(ml_change) as mls, sum(gold_change) as gold
+                                                FROM transactions_orders
+                                                  """)).fetchone()
 
-    print("number_of_potions", total_pots, "ml_in_barrels", (g[1] + g[2] + g[3] + g[4]), "gold", g[0])
-    return {"number_of_potions": total_pots, "ml_in_barrels": (g[1] + g[2] + g[3] + g[4]), "gold": g[0]}
+    print("number_of_potions", results[0], "ml_in_barrels", results[1], "gold", results[2])
+    return {"number_of_potions": results[0], "ml_in_barrels": results[1], "gold": results[2]}
 
 class Result(BaseModel):
     gold_match: bool

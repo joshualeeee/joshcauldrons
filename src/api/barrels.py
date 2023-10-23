@@ -25,36 +25,40 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(barrels_delivered)
 
     gold_paid = 0
-    red_ml = 0
-    green_ml = 0
-    blue_ml = 0
-    dark_ml = 0
+    ml = [0,0,0,0]
 
     for barrel in barrels_delivered:
         gold_paid += barrel.price * barrel.quantity
         if barrel.potion_type == [1,0,0,0]:
-            red_ml += barrel.ml_per_barrel * barrel.quantity
+            ml[0] += barrel.ml_per_barrel * barrel.quantity
         elif barrel.potion_type == [0,1,0,0]:
-            green_ml += barrel.ml_per_barrel * barrel.quantity
+            ml[1] += barrel.ml_per_barrel * barrel.quantity
         elif barrel.potion_type == [0,0,1,0]:
-            blue_ml += barrel.ml_per_barrel * barrel.quantity
+            ml[2] += barrel.ml_per_barrel * barrel.quantity
         elif barrel.potion_type == [0,0,0,1]:
-            dark_ml += barrel.ml_per_barrel * barrel.quantity
+            ml[3] += barrel.ml_per_barrel * barrel.quantity
         else:
             raise Exception("Invalid Potion Type")
         
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(
-            """
-            UPDATE globals SET
-            gold = gold - :gold_paid,
-            red_ml = red_ml + :red_ml,
-            green_ml = green_ml + :green_ml,
-            blue_ml = blue_ml + :blue_ml,
-            dark_ml = dark_ml + :dark_ml
-            """),
-            [{"gold_paid": gold_paid, "red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml}])
-
+        for i, amount in enumerate(ml):
+            if amount == 0:
+                continue
+            connection.execute(
+                    sqlalchemy.text("""
+                                    INSERT INTO transactions_orders (barrel_id, ml_change, time)
+                                    VALUES (:id, :change, NOW())
+                                    """),
+                    [{"id": i + 1,
+                    "change": amount}])
+            
+        connection.execute(
+                    sqlalchemy.text("""
+                                    INSERT INTO transactions_orders (gold_change, time)
+                                    VALUES (:change, NOW())
+                                    """),
+                    [{"change": gold_paid * -1}])
+        
     return "OK"
 
 
@@ -74,7 +78,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     global current_index
     
     with db.engine.begin() as connection:
-        query = connection.execute(sqlalchemy.text("""SELECT gold FROM globals""")).fetchone()
+        query = connection.execute(sqlalchemy.text("""SELECT sum(gold_change) FROM transactions_orders""")).fetchone()
         
         gold = query[0]
 

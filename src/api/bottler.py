@@ -22,40 +22,36 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     with db.engine.begin() as connection:
         print(potions_delivered)    
 
-        red_ml = 0
-        green_ml = 0
-        blue_ml = 0
-        dark_ml = 0
+        ml = [0,0,0,0]
 
         for potion in potions_delivered:
-            red_ml += potion.quantity * potion.potion_type[0]
-            green_ml += potion.quantity * potion.potion_type[1]
-            blue_ml += potion.quantity * potion.potion_type[2]
-            dark_ml += potion.quantity * potion.potion_type[3]
+            ml[0] += potion.quantity * potion.potion_type[0]
+            ml[1] += potion.quantity * potion.potion_type[1]
+            ml[2] += potion.quantity * potion.potion_type[2]
+            ml[3] += potion.quantity * potion.potion_type[3]
 
             connection.execute(
                 sqlalchemy.text("""
-                                UPDATE potions 
-                                SET inventory = inventory + :additional_potions
-                                WHERE potion_type = :potion_type
+                                INSERT INTO transactions_orders (potion_id, potion_change, time)
+                                SELECT p.id, :additional_potions, NOW()
+                                FROM potions AS p
+                                WHERE p.potion_type = :potion_type
                                 """),
                 [{"additional_potions": potion.quantity,
                 "potion_type": potion.potion_type}])
             
             print("additional_potions", potion.quantity, "potion_type", potion.potion_type)
         
-        connection.execute(
-                sqlalchemy.text("""
-                                UPDATE globals SET 
-                                red_ml = red_ml - :red_ml,
-                                green_ml = green_ml - :green_ml,
-                                blue_ml = blue_ml - :blue_ml,
-                                dark_ml = dark_ml - :dark_ml
-                                """),
-                [{"red_ml": red_ml,
-                "green_ml": green_ml,
-                "blue_ml": blue_ml,
-                "dark_ml": dark_ml}])
+        for i, amount in enumerate(ml):
+            if amount == 0:
+                continue
+            connection.execute(
+                    sqlalchemy.text("""
+                                    INSERT INTO transactions_orders (barrel_id, ml_change, time)
+                                    VALUES (:id, :change, NOW())
+                                    """),
+                    [{"id": i + 1,
+                    "change": amount * -1}])
 
     return "OK"
 
@@ -87,14 +83,26 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     with db.engine.begin() as connection:
-        q = connection.execute(sqlalchemy.text("SELECT red_ml, green_ml, blue_ml, dark_ml FROM globals")).fetchone()
+        q = connection.execute(sqlalchemy.text("""
+                                                SELECT barrel_id, SUM(ml_change) AS total_ml_change
+                                                FROM public.transactions_orders
+                                                WHERE barrel_id IN (1, 2, 3, 4)
+                                                GROUP BY barrel_id
+                                                ORDER BY barrel_id ASC
+                                               """)).fetchall()
 
-        ml_amounts = [q[0], q[1], q[2], q[3]]
+        ml_amounts = []
 
-        potions = connection.execute(sqlalchemy.text("""SELECT potion_type
-                                                        FROM potions
-                                                        ORDER BY inventory ASC, cost DESC""")).fetchall()
-
+        for amount in q:
+            ml_amounts.append(amount[1])
+        
+        potions = connection.execute(sqlalchemy.text("""
+                                                    SELECT potion_type, inventory
+                                                    FROM potions as p
+                                                    JOIN transactions_orders as tran ON p.id = tran.potion_id
+                                                    GROUP BY p.id
+                                                    ORDER BY SUM(tran.potion_change) ASC, p.cost ASC
+                                                     """)).fetchall()
         res = []
         for pot in potions:
             if pot[0][0] == 100 or pot[0][1] == 100 or pot[0][2] == 100 or pot[0][3] == 100:

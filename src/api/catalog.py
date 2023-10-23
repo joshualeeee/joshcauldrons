@@ -13,8 +13,11 @@ def get_catalog():
 
     with db.engine.begin() as connection:
         pots = connection.execute(sqlalchemy.text("""
-                                                  SELECT sku, potion_name, inventory, cost, potion_type
-                                                  FROM potions""")).fetchall()
+                                                    SELECT p.sku, p.potion_name, SUM(tran.potion_change), p.cost, p.potion_type
+                                                    FROM transactions_orders as tran
+                                                    JOIN potions AS p ON tran.potion_id = p.id
+                                                    GROUP BY p.id
+                                                  """)).fetchall()
     
     res = []
     for p in pots:
