@@ -106,7 +106,7 @@ def get_bottle_plan():
         res = []
         for pot in potions:
             if pot[0][0] == 100 or pot[0][1] == 100 or pot[0][2] == 100 or pot[0][3] == 100:
-                double_threshold = [6 * value for value in pot[0]]
+                double_threshold = [20 * value for value in pot[0]]
                 create_potions(ml_amounts, pot[0], res, double_threshold)
             else:
                 create_potions(ml_amounts, pot[0], res, pot[0]) 
