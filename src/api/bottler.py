@@ -97,16 +97,16 @@ def get_bottle_plan():
             ml_amounts.append(amount[1])
         
         potions = connection.execute(sqlalchemy.text("""
-                                                    SELECT potion_type, inventory
+                                                    SELECT p.potion_type
                                                     FROM potions as p
                                                     JOIN transactions_orders as tran ON p.id = tran.potion_id
                                                     GROUP BY p.id
-                                                    ORDER BY SUM(tran.potion_change) ASC, p.cost ASC
+                                                    ORDER BY SUM(tran.potion_change) ASC, p.cost DESC
                                                      """)).fetchall()
         res = []
         for pot in potions:
             if pot[0][0] == 100 or pot[0][1] == 100 or pot[0][2] == 100 or pot[0][3] == 100:
-                double_threshold = [2 * value for value in pot[0]]
+                double_threshold = [6 * value for value in pot[0]]
                 create_potions(ml_amounts, pot[0], res, double_threshold)
             else:
                 create_potions(ml_amounts, pot[0], res, pot[0]) 
