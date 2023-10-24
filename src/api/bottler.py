@@ -56,19 +56,24 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     return "OK"
 
 
-def create_potions(ml, potion_type, result_array, threshold):
+def create_potions(ml, potion_type, result_array, threshold, total):
     new = 0
 
     while ml[0] >= threshold[0] and ml[1] >= threshold[1] and ml[2] >= threshold[2] and ml[3] >= threshold[3]:
-        for i in range(4):
-            ml[i] -= potion_type[i]
-        new += 1
+        if total < 300:
+            for i in range(4):
+                ml[i] -= potion_type[i]
+            new += 1
+            total += 1
+        else:
+            break
     
     if new > 0:
         result_array.append({
             "potion_type": potion_type,
             "quantity": new,
         })
+    return new
 
 
 # Gets called 4 times a day
@@ -85,13 +90,17 @@ def get_bottle_plan():
     with db.engine.begin() as connection:
         q = connection.execute(sqlalchemy.text("""
                                                 SELECT barrel_id, SUM(ml_change) AS total_ml_change
-                                                FROM public.transactions_orders
+                                                FROM transactions_orders
                                                 WHERE barrel_id IN (1, 2, 3, 4)
                                                 GROUP BY barrel_id
                                                 ORDER BY barrel_id ASC
                                                """)).fetchall()
+        
+        p = connection.execute(sqlalchemy.text("""SELECT sum(potion_change) as pots FROM transactions_orders""")).fetchone()
 
         ml_amounts = []
+        total_pots = p[0]
+        print("total", total_pots)
 
         for amount in q:
             ml_amounts.append(amount[1])
@@ -107,9 +116,11 @@ def get_bottle_plan():
         for pot in potions:
             if pot[0][0] == 100 or pot[0][1] == 100 or pot[0][2] == 100 or pot[0][3] == 100:
                 double_threshold = [20 * value for value in pot[0]]
-                create_potions(ml_amounts, pot[0], res, double_threshold)
+                new = create_potions(ml_amounts, pot[0], res, double_threshold, total_pots)
+                total_pots += new
             else:
-                create_potions(ml_amounts, pot[0], res, pot[0]) 
+                new = create_potions(ml_amounts, pot[0], res, pot[0], total_pots) 
+                total_pots += new
 
-        print(res)
+        print(total_pots, res, ml_amounts)
         return res
