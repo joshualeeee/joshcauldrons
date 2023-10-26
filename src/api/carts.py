@@ -61,23 +61,16 @@ def search_orders(
     elif sort_col is search_sort_options.item_sku:
         order_by = db.potions.c.sku
     elif sort_col is search_sort_options.line_item_total:
-        order_by = db.transactions_orders.c.potion_change
+        order_by = db.transactions_orders.c.gold_change
     elif sort_col is search_sort_options.timestamp:
         order_by = db.transactions_orders.c.time
     else:
         assert False
-    
 
     if sort_order == search_sort_order.desc:
-        if sort_col is search_sort_options.line_item_total:
-            order_by = sqlalchemy.asc(order_by)
-        else:
-            order_by = sqlalchemy.desc(order_by)
+        order_by = sqlalchemy.desc(order_by)
     else:
-        if sort_col is search_sort_options.line_item_total:
-            order_by = sqlalchemy.desc(order_by)
-        else:
-            order_by = sqlalchemy.asc(order_by)
+        order_by = sqlalchemy.asc(order_by)
 
     joined_tables = sqlalchemy.join(
         db.transactions_orders,
@@ -94,6 +87,7 @@ def search_orders(
             db.potions.c.sku,
             db.carts.c.customer_name,
             db.transactions_orders.c.potion_change,
+            db.transactions_orders.c.gold_change,
             db.transactions_orders.c.time,
         )
         .select_from(joined_tables)
@@ -126,9 +120,9 @@ def search_orders(
                 res.append(
                     {
                         "line_item_id": row.id,
-                        "item_sku": row.sku,
+                        "item_sku": str(row.potion_change * -1) + " " + row.sku,
                         "customer_name": row.customer_name,
-                        "line_item_total": row.potion_change * -1,
+                        "line_item_total": row.gold_change,
                         "timestamp": row.time,
                     }
                 )
