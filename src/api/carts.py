@@ -54,19 +54,104 @@ def search_orders(
     time is 5 total line items.
     """
 
-    return {
-        "previous": "",
-        "next": "",
-        "results": [
-            {
-                "line_item_id": 1,
-                "item_sku": "1 oblivion potion",
-                "customer_name": "Scaramouche",
-                "line_item_total": 50,
-                "timestamp": "2021-01-01T00:00:00Z",
+    start = 0 if search_page == "" else int(search_page)
+
+    if sort_col is search_sort_options.customer_name:
+        order_by = db.carts.c.customer_name
+    elif sort_col is search_sort_options.item_sku:
+        order_by = db.potions.c.sku
+    elif sort_col is search_sort_options.line_item_total:
+        order_by = db.transactions_orders.c.potion_change
+    elif sort_col is search_sort_options.timestamp:
+        order_by = db.transactions_orders.c.time
+    else:
+        assert False
+    
+
+    if sort_order == search_sort_order.desc:
+        if sort_col is search_sort_options.line_item_total:
+            order_by = sqlalchemy.asc(order_by)
+        else:
+            order_by = sqlalchemy.desc(order_by)
+    else:
+        if sort_col is search_sort_options.line_item_total:
+            order_by = sqlalchemy.desc(order_by)
+        else:
+            order_by = sqlalchemy.asc(order_by)
+
+    joined_tables = sqlalchemy.join(
+        db.transactions_orders,
+        db.potions,
+        db.transactions_orders.c.potion_id == db.potions.c.id
+    ).join(
+        db.carts,
+        db.transactions_orders.c.cart_id == db.carts.c.id
+    )
+
+    stmt = (
+        sqlalchemy.select(
+            db.transactions_orders.c.id,
+            db.potions.c.sku,
+            db.carts.c.customer_name,
+            db.transactions_orders.c.potion_change,
+            db.transactions_orders.c.time,
+        )
+        .select_from(joined_tables)
+        .limit(6)
+        .offset(start)
+        .order_by(order_by)
+    )
+
+    if customer_name != "":
+        stmt = stmt.where(db.carts.c.customer_name.ilike(f"%{customer_name}%"))
+    
+    if potion_sku != "":
+        stmt = stmt.where(db.potions.c.sku.ilike(f"%{potion_sku}%"))
+
+    prevP = "" if start == 0 else str(start - 5)
+    nextP = ""
+    
+    with db.engine.connect() as conn:
+        result = conn.execute(stmt).fetchall()
+        if len(result) >= 6:
+            if prevP == "":
+                nextP = "5"
+            else:
+                nextP = str(int(prevP) + 10)
+        res = []
+        i = 0
+        for row in result:
+            if i < 5:
+                i += 1
+                res.append(
+                    {
+                        "line_item_id": row.id,
+                        "item_sku": row.sku,
+                        "customer_name": row.customer_name,
+                        "line_item_total": row.potion_change * -1,
+                        "timestamp": row.time,
+                    }
+                )
+
+    return  {
+                "previous": prevP,
+                "next": nextP,
+                "results": res
             }
-        ],
-    }
+
+    # return {
+    #     "previous": "",
+    #     "next": "",
+    #     "results": [
+    #         {
+    #             "line_item_id": 1,
+    #             "item_sku": "1 oblivion potion",
+    #             "customer_name": "Scaramouche",
+    #             "line_item_total": 50,
+    #             "timestamp": "2021-01-01T00:00:00Z",
+    #         }
+    #     ],
+    # }
 
 
 class NewCart(BaseModel):
