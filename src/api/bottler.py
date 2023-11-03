@@ -60,7 +60,7 @@ def create_potions(ml, potion_type, result_array, threshold, total):
     new = 0
 
     while ml[0] >= threshold[0] and ml[1] >= threshold[1] and ml[2] >= threshold[2] and ml[3] >= threshold[3]:
-        if total < 300 and new <= 30:
+        if total < 300 and new <= 40:
             for i in range(4):
                 ml[i] -= potion_type[i]
             new += 1

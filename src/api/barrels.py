@@ -94,7 +94,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 })
                 break
 
-        while gold >= 50 and bought < 3:
+        while gold >= 50 and bought < 5:
             for barrel in wholesale_catalog:
                 if options[current_index] == barrel.potion_type and barrel.price <= gold:
                     bought += 1
