@@ -117,17 +117,18 @@ def get_bottle_plan():
         res = []
 
         for pot in potions:
-            if less >= 3:
-                new = create_potions(ml_amounts, pot[0], res, pot[0], total_pots) 
-                total_pots += new
-            else:
-                if pot[0][0] == 100 or pot[0][1] == 100 or pot[0][2] == 100 or pot[0][3] == 100:
-                    double_threshold = [20 * value for value in pot[0]]
-                    new = create_potions(ml_amounts, pot[0], res, double_threshold, total_pots)
-                    total_pots += new
-                else:
+            if pot[0] != [0,50,50,0]:
+                if less >= 3:
                     new = create_potions(ml_amounts, pot[0], res, pot[0], total_pots) 
                     total_pots += new
+                else:
+                    if pot[0][0] == 100 or pot[0][1] == 100 or pot[0][2] == 100 or pot[0][3] == 100:
+                        double_threshold = [20 * value for value in pot[0]]
+                        new = create_potions(ml_amounts, pot[0], res, double_threshold, total_pots)
+                        total_pots += new
+                    else:
+                        new = create_potions(ml_amounts, pot[0], res, pot[0], total_pots) 
+                        total_pots += new
 
         print(total_pots, res, ml_amounts)
         return res
