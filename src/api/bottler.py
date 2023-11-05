@@ -117,7 +117,7 @@ def get_bottle_plan():
         res = []
 
         for pot in potions:
-            if pot[0] != [0,50,50,0]:
+            if pot[0] != [0,50,50,0] and pot[0] != [50,0,50,0]:
                 if less >= 3:
                     new = create_potions(ml_amounts, pot[0], res, pot[0], total_pots) 
                     total_pots += new
