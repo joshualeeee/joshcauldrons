@@ -97,12 +97,12 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         while gold >= 50 and bought < 3:
             for barrel in wholesale_catalog:
                 if options[current_index] == barrel.potion_type and barrel.price <= gold:
-                    if barrel.price * 5 <= gold and barrel.ml_per_barrel == 2500:
+                    if barrel.price * 2 <= gold and barrel.ml_per_barrel == 2500:
                         bought += 1
-                        gold -= barrel.price * 5
+                        gold -= barrel.price * 2
                         res.append({
                             "sku": barrel.sku,
-                            "quantity": 5,
+                            "quantity": 2,
                         })
                         rotate_options()
                         break
