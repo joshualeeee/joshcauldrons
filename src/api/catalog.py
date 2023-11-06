@@ -17,6 +17,8 @@ def get_catalog():
                                                     FROM transactions_orders as tran
                                                     JOIN potions AS p ON tran.potion_id = p.id
                                                     GROUP BY p.id
+                                                    ORDER BY SUM(tran.potion_change) desc
+                                                    LIMIT 6
                                                   """)).fetchall()
     
     res = []
