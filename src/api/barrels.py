@@ -62,7 +62,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     return "OK"
 
 
-options = [[1,0,0,0], [0,1,0,0], [0,0,1,0]]
+options = [[1,0,0,0], [0,1,0,0], [0,0,1,0],[1,0,0,0]]
 current_index = 0
 
 # Function to rotate to the next option
