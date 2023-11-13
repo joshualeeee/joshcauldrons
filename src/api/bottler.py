@@ -58,13 +58,9 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 
 def create_potions(ml, potion_type, result_array, threshold, total):
     new = 0
-    maxP = 40
-
-    if potion_type[1] > 0 or potion_type[2] > 0:
-        maxP = 20
 
     while ml[0] >= threshold[0] and ml[1] >= threshold[1] and ml[2] >= threshold[2] and ml[3] >= threshold[3]:
-        if total < 300 and new <= maxP:
+        if total < 300 and new <= 30:
             for i in range(4):
                 ml[i] -= potion_type[i]
             new += 1
@@ -129,5 +125,5 @@ def get_bottle_plan():
                     new = create_potions(ml_amounts, pot[0], res, pot[0], total_pots) 
                     total_pots += new
 
-        print(total_pots, res, ml_amounts)
+        print("new_total", total_pots, res, ml_amounts)
         return res
